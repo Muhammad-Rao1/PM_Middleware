@@ -1,9 +1,13 @@
 const express = require('express');
 const axios = require('axios');
 const router = express.Router();
+require('dotenv').config();
 
-const ZOHO_AUTH_URL = 'https://accounts.zoho.com/oauth/v2/auth';
-const ZOHO_TOKEN_URL = 'https://accounts.zoho.com/oauth/v2/token';
+
+
+const { ZOHO_AUTH_URL, REDIRECT_URI,ZOHO_TOKEN_URL } = process.env;
+
+//console.log(ZOHO_TOKEN_URL);
 
 // Temporary store for authorization code
 let authorizationData = {};
@@ -16,7 +20,7 @@ router.post('/authorize', (req, res) => {
         return res.status(400).json({ error: 'Missing required fields.' });
     }
 
-    const authUrl = `${ZOHO_AUTH_URL}?response_type=code&client_id=${client_id}&redirect_uri=${redirect_uri}&scope=${scope}&access_type=offline`;
+    const authUrl = `${ZOHO_AUTH_URL}?response_type=code&client_id=${client_id}&redirect_uri=${REDIRECT_URI}&scope=${scope}&access_type=offline`;
     res.json({ authorization_url: authUrl });
 });
 
@@ -54,12 +58,12 @@ router.post('/get-tokens', async (req, res) => {
         const tokenResponse = await axios.post(ZOHO_TOKEN_URL, null, {
             params: {
                 grant_type: 'authorization_code',
-                client_id,
-                client_secret,
-                redirect_uri,
+                client_id:client_id,
+                client_secret:client_secret,
+                redirect_uri: REDIRECT_URI,
                 code: authorizationData.code,
             },
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
         });
 
         const { access_token, refresh_token, api_domain, token_type, expires_in } = tokenResponse.data;
